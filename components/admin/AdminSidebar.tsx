@@ -19,6 +19,9 @@ import {
   Bell,
   Mail,
   FolderOpen,
+  Palette,
+  Wand2,
+  Brush,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from '@/lib/auth/auth-helpers';
@@ -29,6 +32,21 @@ const menuItems = [
     title: 'Dashboard',
     href: '/admin/dashboard',
     icon: LayoutDashboard,
+  },
+  {
+    title: 'Page Builder',
+    href: '/admin/page-builder',
+    icon: Wand2,
+  },
+  {
+    title: 'Themes',
+    href: '/admin/themes',
+    icon: Palette,
+  },
+  {
+    title: 'Global Styles',
+    href: '/admin/styles',
+    icon: Brush,
   },
   {
     title: 'Berita',
