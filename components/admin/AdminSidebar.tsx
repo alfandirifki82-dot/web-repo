@@ -22,6 +22,8 @@ import {
   Palette,
   Wand2,
   Brush,
+  Sparkles,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from '@/lib/auth/auth-helpers';
@@ -47,6 +49,16 @@ const menuItems = [
     title: 'Global Styles',
     href: '/admin/styles',
     icon: Brush,
+  },
+  {
+    title: 'Animations',
+    href: '/admin/animations',
+    icon: Sparkles,
+  },
+  {
+    title: 'Brand & Logo',
+    href: '/admin/branding',
+    icon: ImageIcon,
   },
   {
     title: 'Berita',
