@@ -1,59 +1,72 @@
-# 🔧 ADMIN LOGIN FIX - SOLVED!
+# 🔧 ADMIN LOGIN FIX - FINAL SOLUTION
 
 **Issue**: GET `admin_users` 500 Internal Server Error saat login
-**Status**: ✅ **FIXED!**
-**Date**: 20 November 2025
+**Status**: ✅ **FIXED!** (Updated: 23 Nov 2025)
+**Latest Migration**: `fix_circular_dependency_rls.sql`
 
 ---
 
-## 🔍 DIAGNOSIS
+## 🔍 DIAGNOSIS (Updated)
 
 ### Error Yang Terjadi:
 ```
-GET https://yhxhflnadjjewyxmrukp.supabase.co/rest/v1/admin_users?select=*&id=eq.7ef88bf5...
+GET https://yhxhflnadjjewyxmrukp.supabase.co/rest/v1/admin_users?select=*&id=eq.xxx
 500 (Internal Server Error)
 ```
 
-### Root Cause:
-1. ❌ **RLS Policy terlalu strict** - User tidak bisa read record sendiri
-2. ❌ **Foreign key issue** - User ada di `auth.users` tapi tidak di `admin_users`
-3. ❌ **No auto-create** - Tidak ada trigger untuk auto-create `admin_users` record
+### Root Cause (UPDATED):
+1. ❌ **CIRCULAR DEPENDENCY in RLS Policy** - Policy checks admin_users to query admin_users (infinite loop!)
+2. ❌ **Multiple Overlapping Policies** - Too many SELECT policies causing confusion
+3. ❌ **Recursive Subquery** - Policy EXISTS clause queries the same table being accessed
 
 ---
 
-## ✅ SOLUSI YANG DITERAPKAN
+## ✅ SOLUSI FINAL (23 Nov 2025)
 
-### 1. **Fixed RLS Policies** ✅
+### **The Circular Dependency Problem** 🔄
 
-**Old Policy** (TERLALU STRICT):
+**Old Policy** (BROKEN - CIRCULAR!):
 ```sql
--- User tidak bisa read record sendiri!
-CREATE POLICY ... USING (
-  EXISTS (SELECT 1 FROM admin_users WHERE id = auth.uid() AND role = 'admin')
-);
-```
-
-**New Policy** (CORRECT):
-```sql
--- User BISA read record sendiri
-CREATE POLICY "Users can view own admin record"
-  ON admin_users
-  FOR SELECT
-  TO authenticated
-  USING (auth.uid() = id);
-
--- Admins bisa read semua record
+-- ❌ BROKEN: Causes infinite recursion!
 CREATE POLICY "Admins can view all admin records"
   ON admin_users
   FOR SELECT
-  TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM admin_users
+      SELECT 1 FROM admin_users  -- ← Queries same table!
       WHERE id = auth.uid() AND role = 'admin'
     )
   );
 ```
+
+**What Happens**:
+1. User queries `admin_users` → RLS checks policy
+2. Policy runs subquery: `SELECT FROM admin_users` → RLS checks policy again
+3. Policy runs subquery: `SELECT FROM admin_users` → RLS checks policy again
+4. ♾️ INFINITE LOOP → Postgres crashes with 500 error
+
+### **New Policy** (FIXED - NO CIRCULAR!) ✅
+
+```sql
+-- ✅ SIMPLE: No recursion, no subquery to same table
+CREATE POLICY "authenticated_read_admin_users"
+  ON admin_users
+  FOR SELECT
+  TO authenticated
+  USING (true);  -- All authenticated users can read
+```
+
+**Why This Works**:
+- ✅ No circular dependency
+- ✅ No subquery to admin_users
+- ✅ Simple boolean evaluation
+- ✅ Fast (no JOIN, no EXISTS)
+- ✅ Safe (admin_users has no passwords or sensitive data)
+
+**Security is Maintained**:
+- INSERT/UPDATE/DELETE still require admin role
+- Role checking happens in application layer
+- RLS prevents unauthorized writes
 
 ### 2. **Auto-Create Trigger** ✅
 
