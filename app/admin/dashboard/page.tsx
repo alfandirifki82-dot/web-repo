@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { createClient } from '@/lib/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,9 +16,18 @@ import {
   Award,
   Settings,
 } from 'lucide-react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+
+const BarChartWrapper = dynamic(
+  () => import('@/components/admin/ChartComponents').then((mod) => mod.BarChartWrapper),
+  { ssr: false, loading: () => <div className="h-[300px] flex items-center justify-center text-gray-500">Loading chart...</div> }
+);
+
+const PieChartWrapper = dynamic(
+  () => import('@/components/admin/ChartComponents').then((mod) => mod.PieChartWrapper),
+  { ssr: false, loading: () => <div className="h-[300px] flex items-center justify-center text-gray-500">Loading chart...</div> }
+);
 
 interface Stats {
   totalNews: number;
@@ -162,8 +172,21 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-32 bg-gray-200 rounded-lg animate-pulse"></div>
+          ))}
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {[1, 2].map((i) => (
+            <div key={i} className="h-96 bg-gray-200 rounded-lg animate-pulse"></div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -283,15 +306,7 @@ export default function AdminDashboardPage() {
             <CardDescription>Berdasarkan jumlah views</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={viewsData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} fontSize={11} />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="views" fill="#0d9488" />
-              </BarChart>
-            </ResponsiveContainer>
+            <BarChartWrapper data={viewsData} dataKey="views" fill="#0d9488" />
           </CardContent>
         </Card>
 
@@ -301,25 +316,7 @@ export default function AdminDashboardPage() {
             <CardDescription>Berdasarkan jumlah artikel</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            <PieChartWrapper data={categoryData} colors={COLORS} />
           </CardContent>
         </Card>
       </div>

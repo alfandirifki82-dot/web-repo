@@ -31,10 +31,12 @@ export default function AdminLayout({
       const currentUser = await getCurrentUser();
 
       if (!currentUser || !currentUser.adminUser) {
+        console.log('No user or admin user found, redirecting to login');
         router.push('/admin/login');
         return;
       }
 
+      console.log('User authenticated:', currentUser.adminUser.email);
       setUser(currentUser);
     } catch (error) {
       console.error('Auth check error:', error);
