@@ -178,10 +178,12 @@ export default function ProgramPage() {
           <h2 className="text-3xl font-bold tracking-tight">Manajemen Program Keahlian</h2>
           <p className="text-gray-500 mt-1">Kelola program keahlian dan jurusan sekolah</p>
         </div>
-        <Button className="bg-teal-600 hover:bg-teal-700" disabled>
-          <Plus className="w-4 h-4 mr-2" />
-          Tambah Program (Coming Soon)
-        </Button>
+        <Link href="/admin/program/tambah">
+          <Button className="bg-teal-600 hover:bg-teal-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Tambah Program
+          </Button>
+        </Link>
       </div>
 
       <Card>
@@ -293,9 +295,11 @@ export default function ProgramPage() {
                               Lihat
                             </Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem disabled>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Edit (Coming Soon)
+                          <DropdownMenuItem asChild>
+                            <Link href={`/admin/program/edit/${program.id}`}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit
+                            </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => toggleActive(program.id, program.is_active)}>
                             {program.is_active ? 'Nonaktifkan' : 'Aktifkan'}
