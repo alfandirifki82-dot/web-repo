@@ -24,61 +24,109 @@ import {
   Brush,
   Sparkles,
   Image as ImageIcon,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { signOut } from '@/lib/auth/auth-helpers';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
-const menuItems = [
+interface MenuItem {
+  title: string;
+  href?: string;
+  icon: any;
+  children?: MenuItem[];
+}
+
+const menuItems: MenuItem[] = [
   {
     title: 'Dashboard',
     href: '/admin/dashboard',
     icon: LayoutDashboard,
   },
   {
-    title: 'Page Builder',
-    href: '/admin/page-builder',
-    icon: Wand2,
-  },
-  {
-    title: 'Themes',
-    href: '/admin/themes',
+    title: 'Design & Layout',
     icon: Palette,
+    children: [
+      {
+        title: 'Page Builder',
+        href: '/admin/page-builder',
+        icon: Wand2,
+      },
+      {
+        title: 'Themes',
+        href: '/admin/themes',
+        icon: Palette,
+      },
+      {
+        title: 'Global Styles',
+        href: '/admin/styles',
+        icon: Brush,
+      },
+      {
+        title: 'Animations',
+        href: '/admin/animations',
+        icon: Sparkles,
+      },
+      {
+        title: 'Brand & Logo',
+        href: '/admin/branding',
+        icon: ImageIcon,
+      },
+    ],
   },
   {
-    title: 'Global Styles',
-    href: '/admin/styles',
-    icon: Brush,
+    title: 'Konten',
+    icon: FileText,
+    children: [
+      {
+        title: 'Berita',
+        href: '/admin/berita',
+        icon: Newspaper,
+      },
+      {
+        title: 'Program Keahlian',
+        href: '/admin/program',
+        icon: GraduationCap,
+      },
+      {
+        title: 'Guru & Staff',
+        href: '/admin/guru',
+        icon: Users,
+      },
+      {
+        title: 'Prestasi',
+        href: '/admin/prestasi',
+        icon: Award,
+      },
+      {
+        title: 'Events',
+        href: '/admin/events',
+        icon: Calendar,
+      },
+      {
+        title: 'Pengumuman',
+        href: '/admin/pengumuman',
+        icon: Bell,
+      },
+    ],
   },
   {
-    title: 'Animations',
-    href: '/admin/animations',
-    icon: Sparkles,
-  },
-  {
-    title: 'Brand & Logo',
-    href: '/admin/branding',
-    icon: ImageIcon,
-  },
-  {
-    title: 'Berita',
-    href: '/admin/berita',
-    icon: Newspaper,
-  },
-  {
-    title: 'Program Keahlian',
-    href: '/admin/program',
-    icon: GraduationCap,
-  },
-  {
-    title: 'Guru & Staff',
-    href: '/admin/guru',
-    icon: Users,
-  },
-  {
-    title: 'Galeri',
-    href: '/admin/galeri',
+    title: 'Media & Galeri',
     icon: Images,
+    children: [
+      {
+        title: 'Galeri',
+        href: '/admin/galeri',
+        icon: Images,
+      },
+      {
+        title: 'Dokumen',
+        href: '/admin/dokumen',
+        icon: FolderOpen,
+      },
+    ],
   },
   {
     title: 'PPDB',
@@ -86,39 +134,25 @@ const menuItems = [
     icon: UserCheck,
   },
   {
-    title: 'Halaman',
-    href: '/admin/halaman',
-    icon: FileText,
-  },
-  {
-    title: 'Menu Navigasi',
-    href: '/admin/menu',
+    title: 'Website',
     icon: MenuIcon,
-  },
-  {
-    title: 'Prestasi',
-    href: '/admin/prestasi',
-    icon: Award,
-  },
-  {
-    title: 'Events',
-    href: '/admin/events',
-    icon: Calendar,
-  },
-  {
-    title: 'Pengumuman',
-    href: '/admin/pengumuman',
-    icon: Bell,
-  },
-  {
-    title: 'Newsletter',
-    href: '/admin/newsletter',
-    icon: Mail,
-  },
-  {
-    title: 'Dokumen',
-    href: '/admin/dokumen',
-    icon: FolderOpen,
+    children: [
+      {
+        title: 'Halaman',
+        href: '/admin/halaman',
+        icon: FileText,
+      },
+      {
+        title: 'Menu Navigasi',
+        href: '/admin/menu',
+        icon: MenuIcon,
+      },
+      {
+        title: 'Newsletter',
+        href: '/admin/newsletter',
+        icon: Mail,
+      },
+    ],
   },
   {
     title: 'Pengaturan',
@@ -130,6 +164,7 @@ const menuItems = [
 export function AdminSidebar({ className }: { className?: string }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [openGroups, setOpenGroups] = useState<string[]>(['Design & Layout', 'Konten']);
 
   const handleLogout = async () => {
     try {
@@ -139,6 +174,82 @@ export function AdminSidebar({ className }: { className?: string }) {
     } catch (error) {
       console.error('Logout error:', error);
     }
+  };
+
+  const toggleGroup = (title: string) => {
+    setOpenGroups(prev =>
+      prev.includes(title)
+        ? prev.filter(g => g !== title)
+        : [...prev, title]
+    );
+  };
+
+  const renderMenuItem = (item: MenuItem) => {
+    const Icon = item.icon;
+    const hasChildren = item.children && item.children.length > 0;
+    const isOpen = openGroups.includes(item.title);
+    const isActive = item.href && (pathname === item.href || pathname?.startsWith(item.href + '/'));
+
+    if (hasChildren) {
+      return (
+        <div key={item.title} className="space-y-1">
+          <button
+            onClick={() => toggleGroup(item.title)}
+            className="flex items-center justify-between w-full rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-teal-50 hover:text-teal-900 text-gray-700"
+          >
+            <div className="flex items-center gap-3">
+              <Icon className="h-5 w-5" />
+              {item.title}
+            </div>
+            {isOpen ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </button>
+          {isOpen && (
+            <div className="ml-6 space-y-1 border-l-2 border-gray-200 pl-2">
+              {item.children?.map(child => {
+                const ChildIcon = child.icon;
+                const isChildActive = child.href && (pathname === child.href || pathname?.startsWith(child.href + '/'));
+
+                return (
+                  <Link
+                    key={child.href}
+                    href={child.href!}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-teal-50 hover:text-teal-900',
+                      isChildActive
+                        ? 'bg-teal-100 text-teal-900'
+                        : 'text-gray-600'
+                    )}
+                  >
+                    <ChildIcon className="h-4 w-4" />
+                    {child.title}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <Link
+        key={item.href}
+        href={item.href!}
+        className={cn(
+          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-teal-50 hover:text-teal-900',
+          isActive
+            ? 'bg-teal-100 text-teal-900'
+            : 'text-gray-700'
+        )}
+      >
+        <Icon className="h-5 w-5" />
+        {item.title}
+      </Link>
+    );
   };
 
   return (
@@ -152,27 +263,8 @@ export function AdminSidebar({ className }: { className?: string }) {
             </h2>
             <p className="text-sm text-gray-500 mt-1">SMK Mustaqbal</p>
           </div>
-          <div className="space-y-1">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-teal-50 hover:text-teal-900',
-                    isActive
-                      ? 'bg-teal-100 text-teal-900'
-                      : 'text-gray-700'
-                  )}
-                >
-                  <Icon className="h-5 w-5" />
-                  {item.title}
-                </Link>
-              );
-            })}
+          <div className="space-y-1 max-h-[calc(100vh-200px)] overflow-y-auto">
+            {menuItems.map(renderMenuItem)}
           </div>
         </div>
       </div>
