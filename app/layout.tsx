@@ -4,6 +4,7 @@ import { Inter, Poppins } from 'next/font/google';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import WhatsAppButton from '@/components/WhatsAppButton';
+import { ThemeProvider } from '@/components/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
 import { Toaster as SonnerToaster } from 'sonner';
 
@@ -30,12 +31,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="id" className="scroll-smooth">
       <body className={`${inter.variable} ${poppins.variable} font-sans bg-slate-50 text-slate-800 antialiased`}>
-        <Header />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
-        <WhatsAppButton />
-        <Toaster position="top-right" />
-        <SonnerToaster position="top-right" richColors />
+        <ThemeProvider>
+          <Header />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
+          <WhatsAppButton />
+          <Toaster position="top-right" />
+          <SonnerToaster position="top-right" richColors />
+        </ThemeProvider>
       </body>
     </html>
   );
