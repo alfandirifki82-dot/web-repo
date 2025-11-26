@@ -9,13 +9,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, X, User } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { CertificationManager } from '@/components/admin/CertificationManager';
+import { FileUploader } from '@/components/admin/FileUploader';
 
 export default function TambahGuruPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [certifications, setCertifications] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     full_name: '',
     nip: '',
@@ -65,6 +68,7 @@ export default function TambahGuruPage() {
         phone: formData.phone || null,
         photo_url: formData.photo_url || null,
         bio: formData.bio || null,
+        certifications: certifications.length > 0 ? certifications : null,
         is_active: formData.is_active,
         order_position: 0,
       });
@@ -210,31 +214,52 @@ export default function TambahGuruPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Foto Profil</CardTitle>
-              <CardDescription>URL foto guru</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <User className="w-5 h-5" />
+                Foto Profil
+              </CardTitle>
+              <CardDescription>Upload foto profil guru</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="photo_url">URL Foto</Label>
-                <Input
-                  id="photo_url"
-                  type="url"
-                  placeholder="https://i.pravatar.cc/150?img=12"
-                  value={formData.photo_url}
-                  onChange={(e) => setFormData({ ...formData, photo_url: e.target.value })}
-                />
-                <p className="text-xs text-gray-500">
-                  Gunakan Pravatar.cc, Imgur, atau URL foto lainnya
-                </p>
-              </div>
-
               {formData.photo_url && (
-                <div className="border rounded-lg p-4 bg-gray-50">
-                  <p className="text-sm font-medium mb-2">Preview:</p>
-                  <img
-                    src={formData.photo_url}
-                    alt="Preview"
-                    className="w-32 h-32 rounded-full object-cover"
+                <div className="flex items-center justify-center">
+                  <div className="relative">
+                    <img
+                      src={formData.photo_url}
+                      alt="Preview"
+                      className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute -top-2 -right-2 rounded-full h-8 w-8 p-0"
+                      onClick={() => setFormData({ ...formData, photo_url: '' })}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {!formData.photo_url && (
+                <FileUploader
+                  bucket="teacher-photos"
+                  accept="image/*"
+                  maxSize={5242880}
+                  onUploadComplete={(url) => setFormData({ ...formData, photo_url: url })}
+                />
+              )}
+
+              {!formData.photo_url && (
+                <div>
+                  <Label htmlFor="photo_url">Atau masukkan URL manual</Label>
+                  <Input
+                    id="photo_url"
+                    type="url"
+                    placeholder="https://i.pravatar.cc/150?img=12"
+                    value={formData.photo_url}
+                    onChange={(e) => setFormData({ ...formData, photo_url: e.target.value })}
                   />
                 </div>
               )}
@@ -250,6 +275,19 @@ export default function TambahGuruPage() {
                   onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Sertifikat & Penghargaan</CardTitle>
+              <CardDescription>Daftar sertifikat dan penghargaan yang dimiliki</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CertificationManager
+                certifications={certifications}
+                onChange={setCertifications}
+              />
             </CardContent>
           </Card>
 

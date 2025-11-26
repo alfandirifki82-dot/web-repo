@@ -9,9 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import { ArrowLeft, Plus, X, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { IconPicker } from '@/components/admin/IconPicker';
+import { FileUploader } from '@/components/admin/FileUploader';
 
 export default function TambahProgramPage() {
   const router = useRouter();
@@ -20,7 +22,7 @@ export default function TambahProgramPage() {
     title: '',
     slug: '',
     description: '',
-    icon: 'graduation-cap',
+    icon: 'GraduationCap',
     image_url: '',
     color_theme: '#0d9488',
     is_active: true,
@@ -222,17 +224,12 @@ export default function TambahProgramPage() {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="image">URL Gambar</Label>
-                <Input
-                  id="image"
-                  type="url"
-                  placeholder="https://example.com/image.jpg"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                <IconPicker
+                  value={formData.icon}
+                  onChange={(icon) => setFormData({ ...formData, icon })}
+                  label="Icon Program"
+                  description="Pilih icon yang merepresentasikan program"
                 />
-                <p className="text-xs text-gray-500">
-                  Gunakan URL gambar dari Unsplash atau hosting lainnya
-                </p>
               </div>
 
               <div className="flex items-center justify-between p-4 border rounded-lg">
@@ -246,6 +243,58 @@ export default function TambahProgramPage() {
                   onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ImageIcon className="w-5 h-5" />
+                Gambar Banner Program
+              </CardTitle>
+              <CardDescription>Upload gambar banner untuk program (Opsional)</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {formData.image_url && (
+                <div className="relative w-full h-48 rounded-lg overflow-hidden border">
+                  <img
+                    src={formData.image_url}
+                    alt="Banner preview"
+                    className="w-full h-full object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-2 right-2"
+                    onClick={() => setFormData({ ...formData, image_url: '' })}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+
+              {!formData.image_url && (
+                <FileUploader
+                  bucket="program-icons"
+                  accept="image/*"
+                  maxSize={2097152}
+                  onUploadComplete={(url) => setFormData({ ...formData, image_url: url })}
+                />
+              )}
+
+              {!formData.image_url && (
+                <div>
+                  <Label htmlFor="image-url">Atau masukkan URL manual</Label>
+                  <Input
+                    id="image-url"
+                    type="url"
+                    placeholder="https://example.com/image.jpg"
+                    value={formData.image_url}
+                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 
