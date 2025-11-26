@@ -550,6 +550,7 @@ Tentang Kami ▼
    - **NPSN**: `12345678`
    - **Alamat Lengkap**: `Jl. ...`
    - **Telepon**: `021-12345678`
+   - 
    - **WhatsApp**: `628123456789` (tanpa +)
    - **Email**: `info@smkmustaqbal.sch.id`
    - **Website**: `https://smkmustaqbal.sch.id`
