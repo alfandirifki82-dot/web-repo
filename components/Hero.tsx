@@ -8,8 +8,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase, type EBrochureDownload } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase';
 
-const heroImages = [
+interface HeroSettings {
+  slides: Array<{ id: number; image_url: string; order: number }>;
+  slider_duration: number;
+  overlay_color: string;
+  overlay_opacity: number;
+  show_indicators: boolean;
+  auto_play: boolean;
+}
+
+const defaultHeroImages = [
   'https://images.pexels.com/photos/5212345/pexels-photo-5212345.jpeg?auto=compress&cs=tinysrgb&w=1920',
   'https://images.pexels.com/photos/5212653/pexels-photo-5212653.jpeg?auto=compress&cs=tinysrgb&w=1920',
   'https://images.pexels.com/photos/8500373/pexels-photo-8500373.jpeg?auto=compress&cs=tinysrgb&w=1920',
@@ -23,13 +33,43 @@ export default function Hero() {
     origin_school: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [heroSettings, setHeroSettings] = useState<HeroSettings | null>(null);
+  const [heroImages, setHeroImages] = useState<string[]>(defaultHeroImages);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroImages.length);
-    }, 5000);
-    return () => clearInterval(interval);
+    fetchHeroSettings();
   }, []);
+
+  async function fetchHeroSettings() {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'hero_settings')
+        .maybeSingle();
+
+      if (data && data.value) {
+        const settings = data.value as HeroSettings;
+        setHeroSettings(settings);
+        setHeroImages(settings.slides.map(s => s.image_url));
+      }
+    } catch (error) {
+      console.error('Error fetching hero settings:', error);
+    }
+  }
+
+  useEffect(() => {
+    const duration = heroSettings?.slider_duration || 5000;
+    const autoPlay = heroSettings?.auto_play !== false;
+
+    if (autoPlay) {
+      const interval = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+      }, duration);
+      return () => clearInterval(interval);
+    }
+  }, [heroImages.length, heroSettings]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,23 +126,31 @@ export default function Hero() {
             />
           </motion.div>
         ))}
-        <div className="absolute inset-0 bg-gradient-to-r from-teal-900/90 to-teal-800/75 mix-blend-multiply z-10"></div>
+        <div
+          className="absolute inset-0 mix-blend-multiply z-10"
+          style={{
+            backgroundColor: heroSettings?.overlay_color || '#0d9488',
+            opacity: heroSettings?.overlay_opacity || 0.9,
+          }}
+        ></div>
         <div className="absolute inset-0 bg-black/20 z-10"></div>
 
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 flex gap-2">
-          {heroImages.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                currentSlide === index
-                  ? 'bg-white w-8'
-                  : 'bg-white/50 hover:bg-white/75'
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
+        {(heroSettings?.show_indicators !== false) && (
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 flex gap-2">
+            {heroImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  currentSlide === index
+                    ? 'bg-white w-8'
+                    : 'bg-white/50 hover:bg-white/75'
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="container mx-auto px-4 relative z-20">

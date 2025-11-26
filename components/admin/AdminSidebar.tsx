@@ -55,6 +55,11 @@ const menuItems: MenuItem[] = [
         icon: Wand2,
       },
       {
+        title: 'Hero Settings',
+        href: '/admin/hero-settings',
+        icon: ImageIcon,
+      },
+      {
         title: 'Themes',
         href: '/admin/themes',
         icon: Palette,
@@ -161,7 +166,7 @@ const menuItems: MenuItem[] = [
   },
 ];
 
-export function AdminSidebar({ className }: { className?: string }) {
+export function AdminSidebar({ className, user }: { className?: string; user?: any }) {
   const pathname = usePathname();
   const router = useRouter();
   const [openGroups, setOpenGroups] = useState<string[]>(['Design & Layout', 'Konten']);
@@ -253,7 +258,7 @@ export function AdminSidebar({ className }: { className?: string }) {
   };
 
   return (
-    <div className={cn('pb-12 min-h-screen', className)}>
+    <div className={cn('pb-12 min-h-screen flex flex-col', className)}>
       <div className="space-y-4 py-4">
         <div className="px-3 py-2">
           <div className="mb-6 px-4">
@@ -263,12 +268,31 @@ export function AdminSidebar({ className }: { className?: string }) {
             </h2>
             <p className="text-sm text-gray-500 mt-1">SMK Mustaqbal</p>
           </div>
-          <div className="space-y-1 max-h-[calc(100vh-200px)] overflow-y-auto">
+
+          {user && (
+            <div className="mb-6 px-4 pb-4 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+                  {(user.adminUser?.full_name || user.user?.email || 'A')[0].toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {user.adminUser?.full_name || 'Admin'}
+                  </p>
+                  <p className="text-xs text-gray-500 capitalize truncate">
+                    {user.adminUser?.role || 'administrator'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-1 max-h-[calc(100vh-280px)] overflow-y-auto">
             {menuItems.map(renderMenuItem)}
           </div>
         </div>
       </div>
-      <div className="px-3 py-2 absolute bottom-4 left-0 right-0">
+      <div className="px-3 py-2 mt-auto">
         <Button
           variant="outline"
           className="w-full justify-start gap-3 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
