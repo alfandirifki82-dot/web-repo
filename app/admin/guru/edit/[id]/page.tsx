@@ -9,9 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, X, User } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { CertificationManager } from '@/components/admin/CertificationManager';
+import { FileUploader } from '@/components/admin/FileUploader';
 
 export default function EditGuruPage() {
   const router = useRouter();
@@ -20,6 +22,7 @@ export default function EditGuruPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [certifications, setCertifications] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     full_name: '',
     nip: '',
@@ -57,6 +60,7 @@ export default function EditGuruPage() {
           bio: data.bio || '',
           is_active: data.is_active ?? true,
         });
+        setCertifications(data.certifications || []);
       }
     } catch (error) {
       console.error('Error fetching teacher:', error);
@@ -105,6 +109,7 @@ export default function EditGuruPage() {
           phone: formData.phone || null,
           photo_url: formData.photo_url || null,
           bio: formData.bio || null,
+          certifications: certifications.length > 0 ? certifications : null,
           is_active: formData.is_active,
           updated_at: new Date().toISOString(),
         })
@@ -260,29 +265,38 @@ export default function EditGuruPage() {
           <Card>
             <CardHeader>
               <CardTitle>Foto Profil</CardTitle>
-              <CardDescription>URL foto guru</CardDescription>
+              <CardDescription>Upload foto guru (max 2MB)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="photo_url">URL Foto</Label>
-                <Input
-                  id="photo_url"
-                  type="url"
-                  placeholder="https://i.pravatar.cc/150?img=12"
-                  value={formData.photo_url}
-                  onChange={(e) => setFormData({ ...formData, photo_url: e.target.value })}
-                />
-              </div>
-
-              {formData.photo_url && (
+              {formData.photo_url ? (
                 <div className="border rounded-lg p-4 bg-gray-50">
-                  <p className="text-sm font-medium mb-2">Preview:</p>
-                  <img
-                    src={formData.photo_url}
-                    alt="Preview"
-                    className="w-32 h-32 rounded-full object-cover"
-                  />
+                  <p className="text-sm font-medium mb-3">Preview:</p>
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={formData.photo_url}
+                      alt="Preview"
+                      className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormData({ ...formData, photo_url: '' })}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Ganti Foto
+                    </Button>
+                  </div>
                 </div>
+              ) : (
+                <FileUploader
+                  bucket="teacher-photos"
+                  accept="image/*"
+                  maxSize={2097152}
+                  onUploadComplete={(url) => setFormData({ ...formData, photo_url: url })}
+                  preview
+                />
               )}
 
               <div className="flex items-center justify-between p-4 border rounded-lg">
@@ -296,6 +310,19 @@ export default function EditGuruPage() {
                   onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Sertifikasi & Kompetensi</CardTitle>
+              <CardDescription>Daftar sertifikat yang dimiliki</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CertificationManager
+                certifications={certifications}
+                onChange={setCertifications}
+              />
             </CardContent>
           </Card>
 

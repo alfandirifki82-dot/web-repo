@@ -2,50 +2,39 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, Home, Info, GraduationCap, Images, Newspaper, Phone, ChevronDown, X, Award } from 'lucide-react';
+import { Menu, X, ChevronDown, Home, Info, GraduationCap, Images, Newspaper, Phone, Award, FileText, Calendar, Users, Building, Mail, Globe, Settings, BookOpen, Trophy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createClient } from '@/lib/supabase';
 
-const navigation = [
-  { name: 'Beranda', href: '/', icon: Home },
-  {
-    name: 'Tentang Kami',
-    href: '#',
-    icon: Info,
-    submenu: [
-      { name: 'Visi dan Misi', href: '/tentang/visi-misi' },
-      { name: 'Sambutan Kepala Sekolah', href: '/tentang/sambutan-kepala-sekolah' },
-      { name: 'Profile Guru', href: '/tentang/profile-guru' },
-    ],
-  },
-  {
-    name: 'Program Keahlian',
-    href: '/program',
-    icon: GraduationCap,
-    submenu: [
-      { name: 'Teknik Otomasi & Robotik', href: '/program/teknik-otomasi-robotik' },
-      { name: 'Product Design & 3D', href: '/program/product-design-3d' },
-      { name: 'IT Support & Network', href: '/program/it-support-network' },
-      { name: 'Web Dev & Digital Marketing', href: '/program/web-dev-digital-marketing' },
-    ],
-  },
-  {
-    name: 'Galeri',
-    href: '#',
-    icon: Images,
-    submenu: [
-      { name: 'Galeri Foto', href: '/galeri/foto' },
-      { name: 'Galeri Video', href: '/galeri/video' },
-    ],
-  },
-  { name: 'Portfolio', href: '/portfolio', icon: Award },
-  { name: 'Berita', href: '/berita', icon: Newspaper },
-  { name: 'Hubungi Kami', href: '/kontak', icon: Phone },
-];
+const iconMap: Record<string, any> = {
+  Home, Info, GraduationCap, Images, Newspaper, Phone, Award, FileText,
+  Calendar, Users, Building, Mail, Globe, Settings, BookOpen, Trophy, Menu
+};
+
+interface MenuItem {
+  id: string;
+  title: string;
+  href: string;
+  icon: string | null;
+  parent_id: string | null;
+  position: number;
+  is_active: boolean;
+}
+
+interface NavigationItem {
+  id: string;
+  name: string;
+  href: string;
+  icon: any;
+  submenu?: { id: string; name: string; href: string }[];
+}
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+  const [navigation, setNavigation] = useState<NavigationItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,6 +43,51 @@ export default function Header() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    fetchMenuItems();
+  }, []);
+
+  async function fetchMenuItems() {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('menu_links')
+        .select('*')
+        .eq('is_active', true)
+        .order('position', { ascending: true });
+
+      if (error) throw error;
+
+      if (data) {
+        const menuItems = data as MenuItem[];
+        const rootItems = menuItems.filter(item => !item.parent_id);
+
+        const nav: NavigationItem[] = rootItems.map(item => {
+          const children = menuItems.filter(child => child.parent_id === item.id);
+          const IconComponent = item.icon && iconMap[item.icon] ? iconMap[item.icon] : Home;
+
+          return {
+            id: item.id,
+            name: item.title,
+            href: item.href,
+            icon: IconComponent,
+            submenu: children.length > 0 ? children.map(child => ({
+              id: child.id,
+              name: child.title,
+              href: child.href
+            })) : undefined
+          };
+        });
+
+        setNavigation(nav);
+      }
+    } catch (error) {
+      console.error('Error fetching menu:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <header

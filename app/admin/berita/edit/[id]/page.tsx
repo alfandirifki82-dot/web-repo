@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +18,16 @@ import {
 import { ArrowLeft, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+import { FileUploader } from '@/components/admin/FileUploader';
+
+const RichTextEditor = dynamic(
+  () => import('@/components/admin/RichTextEditor').then((mod) => mod.RichTextEditor),
+  {
+    ssr: false,
+    loading: () => <p>Loading editor...</p>,
+  }
+);
 
 export default function EditBeritaPage() {
   const router = useRouter();
@@ -179,13 +189,33 @@ export default function EditBeritaPage() {
             </div>
 
             <div>
-              <Label htmlFor="cover_url">URL Gambar Cover</Label>
-              <Input
-                id="cover_url"
-                value={formData.cover_url}
-                onChange={(e) => setFormData({ ...formData, cover_url: e.target.value })}
-                placeholder="https://..."
-              />
+              <Label htmlFor="cover_url">Gambar Cover</Label>
+              {formData.cover_url ? (
+                <div className="mt-2">
+                  <img
+                    src={formData.cover_url}
+                    alt="Cover preview"
+                    className="w-full h-48 object-cover rounded-lg border"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setFormData({ ...formData, cover_url: '' })}
+                    className="mt-2 text-red-600 hover:text-red-700"
+                  >
+                    Ganti Gambar
+                  </Button>
+                </div>
+              ) : (
+                <FileUploader
+                  bucket="news-covers"
+                  accept="image/*"
+                  maxSize={5242880}
+                  onUploadComplete={(url) => setFormData({ ...formData, cover_url: url })}
+                  preview
+                />
+              )}
             </div>
 
             <div>
@@ -202,14 +232,10 @@ export default function EditBeritaPage() {
 
             <div>
               <Label htmlFor="content">Konten Berita</Label>
-              <Textarea
-                id="content"
+              <RichTextEditor
                 value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, content: value })}
                 placeholder="Tulis konten berita lengkap di sini..."
-                rows={15}
-                className="font-mono text-sm"
-                required
               />
             </div>
           </CardContent>

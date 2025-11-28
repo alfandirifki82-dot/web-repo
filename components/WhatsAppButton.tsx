@@ -1,13 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createClient } from '@/lib/supabase';
 
 export default function WhatsAppButton() {
   const [isOpen, setIsOpen] = useState(false);
-  const whatsappNumber = '6281234567890';
-  const defaultMessage = 'Halo, saya ingin konsultasi gratis tentang SMK Mustaqbal';
+  const [whatsappNumber, setWhatsappNumber] = useState('6281234567890');
+  const [defaultMessage, setDefaultMessage] = useState('Halo, saya ingin konsultasi gratis tentang SMK Mustaqbal');
+
+  useEffect(() => {
+    fetchWhatsAppSettings();
+  }, []);
+
+  async function fetchWhatsAppSettings() {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'contact_info')
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data?.value) {
+        const contactInfo = data.value as any;
+        if (contactInfo.whatsapp) {
+          setWhatsappNumber(contactInfo.whatsapp);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching WhatsApp settings:', error);
+    }
+  }
 
   const handleWhatsAppClick = () => {
     const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(defaultMessage)}`;
