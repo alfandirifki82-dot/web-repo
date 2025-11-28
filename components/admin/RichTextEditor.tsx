@@ -80,7 +80,7 @@ export function RichTextEditor({
         />
       </div>
 
-      <style jsx global>{`
+      <style>{`
         .rich-text-editor .ql-container {
           min-height: ${minHeight};
           font-size: 16px;

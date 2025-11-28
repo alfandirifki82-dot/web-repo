@@ -6,14 +6,24 @@ import { ArrowRight, Download, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { supabase, type EBrochureDownload } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-const heroImages = [
+const defaultHeroImages = [
   'https://images.pexels.com/photos/5212345/pexels-photo-5212345.jpeg?auto=compress&cs=tinysrgb&w=1920',
   'https://images.pexels.com/photos/5212653/pexels-photo-5212653.jpeg?auto=compress&cs=tinysrgb&w=1920',
   'https://images.pexels.com/photos/8500373/pexels-photo-8500373.jpeg?auto=compress&cs=tinysrgb&w=1920',
 ];
+
+interface HeroSettings {
+  badge_text: string;
+  title: string;
+  subtitle: string;
+  cta_primary_text: string;
+  cta_primary_url: string;
+  cta_secondary_text: string;
+  slides: Array<{ image_url: string; alt: string }>;
+}
 
 export default function Hero() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -23,24 +33,53 @@ export default function Hero() {
     origin_school: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [heroSettings, setHeroSettings] = useState<HeroSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchHeroSettings();
+  }, []);
+
+  async function fetchHeroSettings() {
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'hero_section')
+        .single();
+
+      if (error) throw error;
+      setHeroSettings(data.value as HeroSettings);
+    } catch (error) {
+      console.error('Error fetching hero settings:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const heroImages = heroSettings?.slides?.map(s => s.image_url) || defaultHeroImages;
+  const badgeText = heroSettings?.badge_text || 'PPDB 2024/2025 Dibuka!';
+  const title = heroSettings?.title || 'Membangun Generasi Unggul';
+  const subtitle = heroSettings?.subtitle || 'Bergabunglah dengan SMK Mustaqbal dan raih masa depan gemilang';
+  const ctaPrimaryText = heroSettings?.cta_primary_text || 'Daftar Sekarang';
+  const ctaPrimaryUrl = heroSettings?.cta_primary_url || '/ppdb';
+  const ctaSecondaryText = heroSettings?.cta_secondary_text || 'Download E-Brosur';
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroImages.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [heroImages.length]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const downloadData: EBrochureDownload = {
-        ...formData,
-      };
-
-      const { error } = await supabase.from('ebrochure_downloads').insert([downloadData]);
+      const supabase = createClient();
+      const { error } = await supabase.from('ebrochure_downloads').insert([formData]);
 
       if (error) throw error;
 
@@ -118,14 +157,11 @@ export default function Hero() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
               </span>
-              Penerimaan Siswa Baru Telah Dibuka
+              {badgeText}
             </div>
 
             <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-              Langkah Awal Menuju{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-200 to-white">
-                Masa Depan Hebat
-              </span>
+              {title}
             </h1>
 
             <p className="text-lg text-slate-100 max-w-2xl mx-auto lg:mx-0 leading-relaxed opacity-90">
