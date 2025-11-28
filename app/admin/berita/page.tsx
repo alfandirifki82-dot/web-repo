@@ -259,10 +259,12 @@ export default function BeritaPage() {
                             <Eye className="w-4 h-4 mr-2" />
                             Lihat
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Pencil className="w-4 h-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
+                          <Link href={`/admin/berita/edit/${article.id}`}>
+                            <DropdownMenuItem>
+                              <Pencil className="w-4 h-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                          </Link>
                           <DropdownMenuItem onClick={() => togglePublish(article.id, article.is_published)}>
                             {article.is_published ? 'Unpublish' : 'Publish'}
                           </DropdownMenuItem>
